@@ -8,9 +8,10 @@ const SECRET_KEY: &[u8] = b"your_secret_key";
 pub struct Claims {
     pub email: String,
     pub exp: usize,
+    pub id: i32,
 }
 
-pub fn generate_jwt(email: &str) -> Result<String, jsonwebtoken::errors::Error> {
+pub fn generate_jwt(email: &str, id: &i32) -> Result<String, jsonwebtoken::errors::Error> {
     let expiration = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("error")
@@ -20,6 +21,7 @@ pub fn generate_jwt(email: &str) -> Result<String, jsonwebtoken::errors::Error> 
     let claims = Claims {
         email: email.to_owned(),
         exp: expiration as usize,
+        id: id.to_owned(),
     };
 
     encode(
