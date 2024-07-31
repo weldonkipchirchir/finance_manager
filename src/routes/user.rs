@@ -1,13 +1,12 @@
-use crate::model::{LoginCredentials, NewUser, User};
+use crate::model::{LoginCredentials, NewUser};
 use crate::repositories::UserRepository;
 use crate::utils::hashing::{hash_password, verify_password};
 use crate::utils::jwt_token::generate_jwt;
-use crate::{AuthenticatedUser, DBConnection};
-use bcrypt::hash;
+use crate::DBConnection;
 use rocket::{
     http::Status,
     post,
-    response::status::{Custom, NoContent},
+    response::status::Custom,
     serde::json::{serde_json::json, Json},
 };
 use serde::{Deserialize, Serialize};
@@ -57,23 +56,7 @@ pub async fn create_user(
                     ));
                 }
                 match UserRepository::create_record(c, user) {
-                    Ok(a_user) => match generate_jwt(&a_user.email) {
-                        Ok(token) => Ok(Custom(
-                            Status::Created,
-                            json!(CreateUserResponse {
-                                user: UserResponse {
-                                    id: a_user.id,
-                                    username: a_user.username,
-                                    email: a_user.email,
-                                },
-                                token,
-                            }),
-                        )),
-                        Err(_) => Err(Custom(
-                            Status::InternalServerError,
-                            json!("Failed to generate token"),
-                        )),
-                    },
+                    Ok(a_user) => Ok(Custom(Status::Created, json!(a_user))),
                     Err(err) => {
                         eprintln!("Error creating a user: {:?}", err);
                         Err(Custom(
@@ -114,7 +97,7 @@ pub async fn login(
     match login_credentials.validate() {
         Ok(()) => match result {
             Ok(user) => match verify_password(&user.password_hash, &password) {
-                Ok(_) => match generate_jwt(&user.email) {
+                Ok(_) => match generate_jwt(&user.email, &user.id) {
                     Ok(token) => Ok(Custom(
                         Status::Ok,
                         json!(CreateUserResponse {
