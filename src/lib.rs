@@ -1,8 +1,6 @@
-#[macro_use]
 extern crate diesel;
-#[macro_use]
-extern crate rocket;
 extern crate diesel_migrations;
+extern crate rocket;
 
 mod model;
 pub mod repositories;
@@ -10,7 +8,7 @@ pub mod routes;
 pub mod schema;
 pub mod utils;
 
-use crate::utils::jwt_token::{validate_jwt, Claims};
+use crate::utils::jwt_token::validate_jwt;
 use diesel::PgConnection;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
@@ -22,6 +20,7 @@ pub struct DBConnection(PgConnection);
 
 pub struct AuthenticatedUser {
     pub email: String,
+    pub id: i32,
 }
 
 #[rocket::async_trait]
@@ -32,11 +31,11 @@ impl<'r> FromRequest<'r> for AuthenticatedUser {
         let headers = request.headers();
         if let Some(auth_header) = headers.get_one("Authorization") {
             if auth_header.starts_with("Bearer ") {
-                let token = &auth_header[7..];
-                match validate_jwt(token) {
+                match validate_jwt(&auth_header[7..]) {
                     Ok(claims) => {
                         return Outcome::Success(AuthenticatedUser {
                             email: claims.email,
+                            id: claims.id,
                         });
                     }
                     Err(_) => return Outcome::Error((Status::Unauthorized, ())),
