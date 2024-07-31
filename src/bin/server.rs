@@ -8,7 +8,12 @@ async fn main() {
             "/",
             routes![
                 finance_manager::routes::user::create_user,
-                finance_manager::routes::user::login
+                finance_manager::routes::user::login,
+                finance_manager::routes::budget::create_budget,
+                finance_manager::routes::budget::update_budget,
+                finance_manager::routes::budget::view_budget,
+                finance_manager::routes::budget::delete_budget,
+                finance_manager::routes::budget::view_budgets
             ],
         )
         .attach(finance_manager::DBConnection::fairing())
