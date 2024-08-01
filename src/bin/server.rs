@@ -13,7 +13,8 @@ async fn main() {
                 finance_manager::routes::budget::update_budget,
                 finance_manager::routes::budget::view_budget,
                 finance_manager::routes::budget::delete_budget,
-                finance_manager::routes::budget::view_budgets
+                finance_manager::routes::budget::view_budgets,
+                finance_manager::routes::transactions::create_transaction,
             ],
         )
         .attach(finance_manager::DBConnection::fairing())
