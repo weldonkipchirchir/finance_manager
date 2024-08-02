@@ -73,17 +73,23 @@ impl TransactionsRepository {
     pub fn find_multiple_transactions(
         c: &mut PgConnection,
         limit: i64,
-    ) -> QueryResult<Vec<Transaction>> {
-        transactions::table.limit(limit).load::<Transaction>(c)
+    ) -> QueryResult<Option<Vec<Transaction>>> {
+        transactions::table
+            .limit(limit)
+            .load::<Transaction>(c)
+            .optional()
     }
-    pub fn find_transaction(c: &mut PgConnection, id: i32) -> QueryResult<Transaction> {
-        transactions::table.find(id).get_result::<Transaction>(c)
+    pub fn find_transaction(c: &mut PgConnection, id: i32) -> QueryResult<Option<Transaction>> {
+        transactions::table
+            .find(id)
+            .get_result::<Transaction>(c)
+            .optional()
     }
     pub fn update_transaction(
         c: &mut PgConnection,
         id: i32,
-        update: Transaction,
-    ) -> QueryResult<Transaction> {
+        update: UpdateTransaction,
+    ) -> QueryResult<Option<Transaction>> {
         diesel::update(transactions::table.find(id))
             .set((
                 transactions::amount.eq(update.amount.to_owned()),
