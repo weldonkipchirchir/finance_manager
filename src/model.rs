@@ -23,7 +23,7 @@ fn validate_start_date_before_end_date(
     Ok(())
 }
 
-#[derive(Queryable, Serialize, Deserialize)]
+#[derive(Queryable, Serialize, Deserialize, Debug)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -42,6 +42,13 @@ pub struct NewUser {
 
     #[validate(length(min = 6, message = "Password must be at least 6 characters long"))]
     pub password_hash: String,
+}
+
+#[derive(Queryable, Serialize, Deserialize, Debug)]
+pub struct UserResponse {
+    pub id: i32,
+    pub username: String,
+    pub email: String,
 }
 
 #[derive(Queryable, Associations, Serialize, Deserialize, Validate)]
@@ -114,6 +121,26 @@ pub struct NewTransaction {
 }
 
 impl NewTransaction {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        // Validate positive amount
+        validate_positive_amount(&self.amount)?;
+
+        Ok(())
+    }
+}
+
+#[derive(Insertable, Serialize, Deserialize, Validate)]
+#[diesel(table_name = transactions)]
+pub struct UpdateTransaction {
+    pub amount: BigDecimal,
+    #[validate(length(min = 3, message = "Category should be more than 2 characters"))]
+    pub category: String,
+    #[validate(length(min = 3, message = "Description should be more than 2 characters"))]
+    pub description: Option<String>,
+    pub date: NaiveDate,
+}
+
+impl UpdateTransaction {
     pub fn validate(&self) -> Result<(), ValidationError> {
         // Validate positive amount
         validate_positive_amount(&self.amount)?;
