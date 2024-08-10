@@ -20,7 +20,7 @@ pub fn create_user(username: String, email: String, password_hash: String) -> Re
         password_hash: hashed_password,
     };
 
-    if UserRepository::find_by_email(&mut connection, email).is_ok() {
+    if UserRepository::find_by_email(&mut connection, &email).is_ok() {
         return Err(AppError::UserRepositoryError);
     };
 
@@ -49,28 +49,28 @@ pub fn delete_users(id: i32) {
     println!("Deleted user with id: {:?}", id);
 }
 
-pub fn update_user(
-    current_email: String,
-    username: String,
-    email: String,
-    password_hash: String,
-) -> Result<(), AppError> {
-    let mut connection = load_db_connection()?;
-    let email_clone = email.clone();
+// pub fn update_user(
+//     current_email: String,
+//     username: String,
+//     email: String,
+//     password_hash: String,
+// ) -> Result<(), AppError> {
+//     let mut connection = load_db_connection()?;
+//     let email_clone = email.clone();
 
-    let hashed_password = hash_password(&password_hash).unwrap();
-    let new_user: NewUser = NewUser {
-        username,
-        email: email_clone,
-        password_hash: hashed_password,
-    };
+//     let hashed_password = hash_password(&password_hash).unwrap();
+//     let new_user: NewUser = NewUser {
+//         username,
+//         email: email_clone,
+//         password_hash: hashed_password,
+//     };
 
-    match UserRepository::find_by_email(&mut connection, current_email) {
-        Ok(Some(user)) => match UserRepository::update_user(&mut connection, user.id, new_user) {
-            Ok(_) => Ok(()),
-            Err(_) => Err(AppError::UserRepositoryError),
-        },
-        Ok(None) => Err(AppError::UserRepositoryError),
-        Err(_) => Err(AppError::UserRepositoryError),
-    }
-}
+//     match UserRepository::find_by_email(&mut connection, &current_email) {
+//         Ok(Some(user)) => match UserRepository::update_user(&mut connection, user.id, new_user) {
+//             Ok(_) => Ok(()),
+//             Err(_) => Err(AppError::UserRepositoryError),
+//         },
+//         Ok(None) => Err(AppError::UserRepositoryError),
+//         Err(_) => Err(AppError::UserRepositoryError),
+//     }
+// }

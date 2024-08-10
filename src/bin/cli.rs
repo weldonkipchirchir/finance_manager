@@ -2,7 +2,7 @@ extern crate env_logger;
 extern crate finance_manager;
 
 use clap::{Arg, Command};
-use finance_manager::command::commands::{create_user, delete_users, list_users, update_user};
+use finance_manager::command::commands::{create_user, delete_users, list_users};
 
 fn main() {
     env_logger::init();
@@ -76,19 +76,19 @@ fn main() {
         } else if let Some(("delete", matches)) = sub_matches.subcommand() {
             let id = matches.get_one::<i32>("id").unwrap();
             delete_users(*id);
-        } else if let Some(("update", matches)) = sub_matches.subcommand() {
-            let current_email = matches
-                .get_one::<String>("current_email")
-                .unwrap()
-                .to_owned();
-            let username = matches.get_one::<String>("username").unwrap().to_owned();
-            let email = matches.get_one::<String>("email").unwrap().to_owned();
-            let password = matches.get_one::<String>("password").unwrap().to_owned();
+        // } else if let Some(("update", matches)) = sub_matches.subcommand() {
+        //     let current_email = matches
+        //         .get_one::<String>("current_email")
+        //         .unwrap()
+        //         .to_owned();
+        //     let username = matches.get_one::<String>("username").unwrap().to_owned();
+        //     let email = matches.get_one::<String>("email").unwrap().to_owned();
+        //     let password = matches.get_one::<String>("password").unwrap().to_owned();
 
-            match update_user(current_email, username, email, password) {
-                Ok(_) => println!("User updated successfully."),
-                Err(e) => eprintln!("Error updating user: {:?}", e),
-            }
+        //     match update_user(current_email, username, email, password) {
+        //         Ok(_) => println!("User updated successfully."),
+        //         Err(e) => eprintln!("Error updating user: {:?}", e),
+        //     }
         }
     }
 }

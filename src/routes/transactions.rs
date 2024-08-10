@@ -22,7 +22,8 @@ pub async fn create_transaction(
                     Ok(transaction) => Ok(Custom(Status::Created, json!({"message": transaction}))),
                     Err(_) => Err(Custom(Status::InternalServerError, json!("error"))),
                 },
-            ).await
+            )
+            .await
         }
         Err(error) => Err(Custom(Status::BadRequest, json!({"errors":error}))),
     }
