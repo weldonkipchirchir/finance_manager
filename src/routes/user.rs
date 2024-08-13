@@ -2,7 +2,8 @@ use crate::model::{LoginCredentials, NewUser};
 use crate::repositories::UserRepository;
 use crate::utils::hashing::{hash_password, verify_password};
 use crate::utils::jwt_token::generate_jwt;
-use crate::DBConnection;
+use crate::{AuthenticatedUser, DBConnection};
+use rocket::put;
 use rocket::{
     http::Status,
     post,
@@ -49,7 +50,6 @@ pub async fn create_user(
             // Data is valid, proceed with creating the user
             db.run(move |c| {
                 if let Ok(_) = UserRepository::find_by_email(c, &user.email) {
-                    // User already exists
                     return Err(Custom(
                         Status::Conflict,
                         json!({"message":"User with this email already exists"}),
@@ -96,7 +96,7 @@ pub async fn login(
         .await;
     match login_credentials.validate() {
         Ok(()) => match result {
-            Ok(user) => match verify_password(&user.password_hash, &password) {
+            Ok(Some(user)) => match verify_password(&user.password_hash, &password) {
                 Ok(_) => match generate_jwt(&user.email, &user.id) {
                     Ok(token) => Ok(Custom(
                         Status::Ok,
@@ -119,11 +119,15 @@ pub async fn login(
                     json!({"error": "Wrong credentials"}),
                 )),
             },
+            Ok(None) => Err(Custom(
+                Status::Forbidden,
+                json!({"error": "Wrong credentials"}),
+            )),
             Err(err) => {
-                eprintln!("Error creating a user: {:?}", err);
+                eprintln!("Error finding user: {:?}", err);
                 Err(Custom(
-                    Status::Forbidden,
-                    json!({"error":"Wrong credentials"}),
+                    Status::InternalServerError,
+                    json!({"error":"Something went wrong"}),
                 ))
             }
         },
@@ -140,4 +144,44 @@ pub async fn login(
             ))
         }
     }
+}
+
+#[put("/user/<id>", format="json", data="<user>")]
+pub async fn update_user(
+    db: DBConnection,
+    id: i32,
+    _auth: AuthenticatedUser,
+    user: Json<NewUser>,
+) -> Result<Custom<Value>, Custom<Value>> {
+    let mut user = user.into_inner();
+    db.run(move |c| {
+        match hash_password(&user.password_hash) {
+            Ok(hashed_password) => user.password_hash = hashed_password,
+            Err(err) => {
+                eprintln!("Error hashing password: {:?}", err);
+                return Err(Custom(
+                    Status::InternalServerError,
+                    json!({"error":"Failed to hash password"}),
+                ));
+            }
+        }
+
+        match UserRepository::find_by_email(c, &user.email) {
+            Ok(Some(_)) => match user.validate() {
+                Ok(()) => match UserRepository::update_user(c, id, user) {
+                    Ok(budget_res) => Ok(Custom(Status::Ok, json!({"message":budget_res}))),
+                    Err(_) => Err(Custom(Status::InternalServerError, json!("error"))),
+                },
+                Err(errors) => Err(Custom(Status::BadRequest, json!({"error":errors}))),
+            },
+            Ok(None) => Err(Custom(
+                Status::NotFound,
+                json!({"error": "User not found"}),
+            )),
+            Err(_) => Err(Custom(
+                Status::InternalServerError,
+                json!({"error":"Something went wrong"}),
+            )),
+        }
+    }).await
 }
