@@ -11,14 +11,28 @@ impl UserRepository {
             .values(record)
             .get_result(c)
     }
-    pub fn find_by_email(c: &mut PgConnection, email: &String) -> QueryResult<User> {
-        diesel::QueryDsl::filter(users::table, users::email.eq(email)).get_result::<User>(c)
+    pub fn find_by_email(c: &mut PgConnection, email: &String) -> QueryResult<Option<User>> {
+        diesel::QueryDsl::filter(users::table, users::email.eq(email)).get_result::<User>(c).optional()
     }
     pub fn find_multiple_users(c: &mut PgConnection, limit: i64) -> QueryResult<Vec<User>> {
         users::table.limit(limit).load::<User>(c)
     }
     pub fn delete_record(c: &mut PgConnection, id: i32) -> QueryResult<usize> {
         diesel::delete(users::table.find(id)).execute(c)
+    }
+    pub fn update_user(
+        c: &mut PgConnection,
+        id: i32,
+        update: NewUser,
+    ) -> QueryResult<Option<User>> {
+        diesel::update(users::table.find(id))
+            .set((
+                users::username.eq(update.username.to_owned()),
+                users::email.eq(update.email.to_owned()),
+                users::password_hash.eq(update.password_hash.to_owned()),
+            ))
+            .execute(c)?;
+        Self::find_by_email(c, &update.email)
     }
 }
 
