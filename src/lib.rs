@@ -2,12 +2,12 @@ extern crate diesel;
 extern crate diesel_migrations;
 extern crate rocket;
 
+pub mod command;
 mod model;
 pub mod repositories;
 pub mod routes;
 pub mod schema;
 pub mod utils;
-pub mod command;
 
 use crate::utils::jwt_token::validate_jwt;
 use diesel::PgConnection;
