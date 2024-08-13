@@ -34,8 +34,4 @@ diesel::table! {
 diesel::joinable!(budgets -> users (user_id));
 diesel::joinable!(transactions -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    budgets,
-    transactions,
-    users,
-);
+diesel::allow_tables_to_appear_in_same_query!(budgets, transactions, users,);
