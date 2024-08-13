@@ -85,7 +85,7 @@ pub async fn update_budget(
     db.run(move |c| match BudgetRepository::find_budget(c, id) {
         Ok(Some(_)) => match budget.validate() {
             Ok(()) => match BudgetRepository::update_budget(c, id, budget.into_inner()) {
-                Ok(budget_res) => Ok(Custom(Status::Created, json!({"message":budget_res}))),
+                Ok(budget_res) => Ok(Custom(Status::Ok, json!({"message":budget_res}))),
                 Err(_) => Err(Custom(Status::InternalServerError, json!("error"))),
             },
             Err(errors) => Err(Custom(Status::BadRequest, json!({"error":errors}))),
