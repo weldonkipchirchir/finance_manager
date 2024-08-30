@@ -12,7 +12,9 @@ impl UserRepository {
             .get_result(c)
     }
     pub fn find_by_email(c: &mut PgConnection, email: &String) -> QueryResult<Option<User>> {
-        diesel::QueryDsl::filter(users::table, users::email.eq(email)).get_result::<User>(c).optional()
+        diesel::QueryDsl::filter(users::table, users::email.eq(email))
+            .get_result::<User>(c)
+            .optional()
     }
     pub fn find_multiple_users(c: &mut PgConnection, limit: i64) -> QueryResult<Vec<User>> {
         users::table.limit(limit).load::<User>(c)
@@ -116,5 +118,76 @@ impl TransactionsRepository {
     }
     pub fn delete_transaction(c: &mut PgConnection, id: i32) -> QueryResult<usize> {
         diesel::delete(transactions::table.find(id)).execute(c)
+    }
+}
+
+pub struct IncomeRepository;
+impl IncomeRepository {
+    pub fn create_income(c: &mut PgConnection, record: NewIncome) -> QueryResult<Income> {
+        diesel::insert_into(income::table)
+            .values(record)
+            .get_result(c)
+    }
+    pub fn find_multiple_income(
+        c: &mut PgConnection,
+        limit: i64,
+    ) -> QueryResult<Option<Vec<Income>>> {
+        income::table.limit(limit).load::<Income>(c).optional()
+    }
+    pub fn find_income(c: &mut PgConnection, id: i32) -> QueryResult<Option<Income>> {
+        income::table.find(id).get_result::<Income>(c).optional()
+    }
+    pub fn delete_income(c: &mut PgConnection, id: i32) -> QueryResult<usize> {
+        diesel::delete(income::table.find(id)).execute(c)
+    }
+    pub fn update_income(
+        c: &mut PgConnection,
+        id: i32,
+        update: NewIncome    
+    )-> QueryResult<Option<Income>>{
+        diesel::update(income::table.find(id))
+            .set((
+                income::amount.eq(update.amount),
+                income::source.eq(update.source),
+                income::date.eq(update.date),
+            ))
+            .execute(c)?;
+        Self::find_income(c, id)
+    }
+}
+
+pub struct GoalsRepository;
+impl GoalsRepository {
+    pub fn create_goal(c: &mut PgConnection, record: NewGoal) -> QueryResult<Goals> {
+        diesel::insert_into(goals::table)
+            .values(record)
+            .get_result(c)
+    }
+    pub fn find_multiple_goals(
+        c: &mut PgConnection,
+        limit: i64,
+    ) -> QueryResult<Option<Vec<Goals>>> {
+        goals::table.limit(limit).load::<Goals>(c).optional()
+    }
+    pub fn find_goal(c: &mut PgConnection, id: i32) -> QueryResult<Option<Goals>> {
+        goals::table.find(id).get_result::<Goals>(c).optional()
+    }
+    pub fn delete_goal(c: &mut PgConnection, id: i32) -> QueryResult<usize> {
+        diesel::delete(goals::table.find(id)).execute(c)
+    }
+    pub fn update_goal(
+        c: &mut PgConnection,
+        id: i32,
+        record: NewGoal,
+    )-> QueryResult<Option<Goals>>{
+        diesel::update(goals::table.find(id))
+            .set((
+                goals::goal_amount.eq(record.goal_amount),
+                goals::goal_description.eq(record.goal_description),
+                goals::deadline.eq(record.deadline),
+                goals::saving.eq(record.saving),
+            ))
+            .execute(c)?;
+        Self::find_goal(c, id)
     }
 }
