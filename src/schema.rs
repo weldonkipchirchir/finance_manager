@@ -12,6 +12,27 @@ diesel::table! {
 }
 
 diesel::table! {
+    goals (id) {
+        id -> Int4,
+        user_id -> Nullable<Int4>,
+        goal_description -> Text,
+        goal_amount -> Numeric,
+        deadline -> Date,
+        saving -> Nullable<Numeric>,
+    }
+}
+
+diesel::table! {
+    income (id) {
+        id -> Int4,
+        user_id -> Nullable<Int4>,
+        amount -> Numeric,
+        source -> Text,
+        date -> Date,
+    }
+}
+
+diesel::table! {
     transactions (id) {
         id -> Int4,
         user_id -> Nullable<Int4>,
@@ -32,6 +53,8 @@ diesel::table! {
 }
 
 diesel::joinable!(budgets -> users (user_id));
+diesel::joinable!(goals -> users (user_id));
+diesel::joinable!(income -> users (user_id));
 diesel::joinable!(transactions -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(budgets, transactions, users,);
+diesel::allow_tables_to_appear_in_same_query!(budgets, goals, income, transactions, users,);
