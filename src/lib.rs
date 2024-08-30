@@ -31,8 +31,8 @@ impl<'r> FromRequest<'r> for AuthenticatedUser {
     async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let headers = request.headers();
         if let Some(auth_header) = headers.get_one("Authorization") {
-            if auth_header.starts_with("Bearer ") {
-                match validate_jwt(&auth_header[7..]) {
+            if let Some(token) = auth_header.strip_prefix("Bearer ") {
+                match validate_jwt(token) {
                     Ok(claims) => {
                         return Outcome::Success(AuthenticatedUser {
                             email: claims.email,
@@ -46,3 +46,4 @@ impl<'r> FromRequest<'r> for AuthenticatedUser {
         Outcome::Error((Status::Unauthorized, ()))
     }
 }
+//to do -- decoding jwt with secret key
