@@ -49,7 +49,7 @@ pub async fn create_user(
             }
             // Data is valid, proceed with creating the user
             db.run(move |c| {
-                if let Ok(_) = UserRepository::find_by_email(c, &user.email) {
+                if UserRepository::find_by_email(c, &user.email).is_ok() {
                     return Err(Custom(
                         Status::Conflict,
                         json!({"message":"User with this email already exists"}),
@@ -146,7 +146,7 @@ pub async fn login(
     }
 }
 
-#[put("/user/<id>", format="json", data="<user>")]
+#[put("/user/<id>", format = "json", data = "<user>")]
 pub async fn update_user(
     db: DBConnection,
     id: i32,
@@ -174,14 +174,12 @@ pub async fn update_user(
                 },
                 Err(errors) => Err(Custom(Status::BadRequest, json!({"error":errors}))),
             },
-            Ok(None) => Err(Custom(
-                Status::NotFound,
-                json!({"error": "User not found"}),
-            )),
+            Ok(None) => Err(Custom(Status::NotFound, json!({"error": "User not found"}))),
             Err(_) => Err(Custom(
                 Status::InternalServerError,
                 json!({"error":"Something went wrong"}),
             )),
         }
-    }).await
+    })
+    .await
 }
