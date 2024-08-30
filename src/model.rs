@@ -23,6 +23,31 @@ fn validate_start_date_before_end_date(
     Ok(())
 }
 
+fn capitalize_first_letter(word: String) -> String {
+    if let Some(first_char) = word.chars().next() {
+        let first = first_char.to_uppercase().collect::<String>();
+        let rest = word.chars().skip(1).collect::<String>().to_lowercase();
+        return format!("{}{}", first, rest);
+    }
+    String::new()
+}
+
+fn validate_category(category: String) -> Result<(), ValidationError> {
+    let value = capitalize_first_letter(category);
+    match value.as_str() {
+        "Groceries" => Ok(()),
+        "Utilities" => Ok(()),
+        "Entertainment" => Ok(()),
+        "Rent" => Ok(()),
+        "Healthcare" => Ok(()),
+        "Electricity" => Ok(()),
+        "Education" => Ok(()),
+        "Subscriptions" => Ok(()),
+        "Other" => Ok(()),
+        _ => Err(ValidationError::new("wrong category")),
+    }
+}
+
 #[derive(Queryable, Serialize, Deserialize, Debug)]
 pub struct User {
     pub id: i32,
@@ -82,6 +107,9 @@ impl NewBudget {
         // Validate date range
         validate_start_date_before_end_date(&self.start_date, &self.end_date)?;
 
+        // validate category
+        validate_category(self.category.clone())?;
+
         Ok(())
     }
 }
@@ -104,6 +132,9 @@ impl UpdateBudget {
         // Validate date range
         validate_start_date_before_end_date(&self.start_date, &self.end_date)?;
 
+        // validate category
+        validate_category(self.category.clone())?;
+
         Ok(())
     }
 }
@@ -125,6 +156,9 @@ impl NewTransaction {
         // Validate positive amount
         validate_positive_amount(&self.amount)?;
 
+        // validate category
+        validate_category(self.category.clone())?;
+
         Ok(())
     }
 }
@@ -144,6 +178,9 @@ impl UpdateTransaction {
     pub fn validate(&self) -> Result<(), ValidationError> {
         // Validate positive amount
         validate_positive_amount(&self.amount)?;
+
+        // validate category
+        validate_category(self.category.clone())?;
 
         Ok(())
     }
@@ -167,4 +204,64 @@ pub struct LoginCredentials {
 
     #[validate(length(min = 6, message = "Password must be at least 6 characters long"))]
     pub password_hash: String,
+}
+
+#[derive(Insertable, Serialize, Deserialize, Validate)]
+#[diesel(table_name= income)]
+pub struct NewIncome {
+    pub user_id: Option<i32>,
+    pub amount: BigDecimal,
+    #[validate(length(min = 3, message = "Description should be more than 2 characters"))]
+    pub source: String,
+    pub date: NaiveDate,
+}
+
+impl NewIncome {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        validate_positive_amount(&self.amount)?;
+
+        Ok(())
+    }
+}
+
+#[derive(Queryable, Associations, Serialize, Deserialize)]
+#[diesel(table_name = income)]
+#[diesel(belongs_to(User))]
+pub struct Income {
+    pub id: i32,
+    pub user_id: Option<i32>,
+    pub amount: BigDecimal,
+    pub source: String,
+    pub date: NaiveDate,
+}
+
+#[derive(Insertable, Serialize, Deserialize, Validate)]
+#[diesel(table_name= goals)]
+pub struct NewGoal {
+    pub user_id: Option<i32>,
+    #[validate(length(min = 3, message = "Description should be more than 2 characters"))]
+    pub goal_description: String,
+    pub goal_amount: BigDecimal,
+    pub deadline: NaiveDate,
+    pub saving: Option<BigDecimal>,
+}
+
+impl NewGoal {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        validate_positive_amount(&self.goal_amount)?;
+
+        Ok(())
+    }
+}
+
+#[derive(Queryable, Serialize, Deserialize, Associations)]
+#[diesel(table_name = goals)]
+#[diesel(belongs_to(User))]
+pub struct Goals {
+    pub id: i32,
+    pub user_id: Option<i32>,
+    pub goal_description: String,
+    pub goal_amount: BigDecimal,
+    pub deadline: NaiveDate,
+    pub saving: Option<BigDecimal>,
 }
