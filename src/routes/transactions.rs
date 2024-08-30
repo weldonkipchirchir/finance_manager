@@ -2,7 +2,7 @@ use crate::model::{NewTransaction, UpdateTransaction};
 use crate::repositories::TransactionsRepository;
 use crate::{AuthenticatedUser, DBConnection};
 use rocket::http::Status;
-use rocket::serde::json::{self, Json};
+use rocket::serde::json::Json;
 use rocket::{delete, put};
 use rocket::{get, post, response::status::Custom};
 use serde_json::{json, Value};
