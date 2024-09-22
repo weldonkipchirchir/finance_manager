@@ -47,21 +47,35 @@ pub async fn create_user(
                     ));
                 }
             }
-            // Data is valid, proceed with creating the user
+            
+            // Check if the email is already registered
             db.run(move |c| {
-                if UserRepository::find_by_email(c, &user.email).is_ok() {
-                    return Err(Custom(
-                        Status::Conflict,
-                        json!({"message":"User with this email already exists"}),
-                    ));
-                }
-                match UserRepository::create_record(c, user) {
-                    Ok(a_user) => Ok(Custom(Status::Created, json!(a_user))),
+                match UserRepository::find_by_email(c, &user.email) {
+                    Ok(Some(_)) => {
+                        // Email is already registered
+                        Err(Custom(
+                            Status::Conflict,
+                            json!({"message":"Email is already registered"}),
+                        ))
+                    },
+                    Ok(None) => {
+                        // Proceed with user creation if email does not exist
+                        match UserRepository::create_record(c, user) {
+                            Ok(a_user) => Ok(Custom(Status::Created, json!(a_user))),
+                            Err(err) => {
+                                eprintln!("Error creating user: {:?}", err);
+                                Err(Custom(
+                                    Status::InternalServerError,
+                                    json!({"error":"Something went wrong"}),
+                                ))
+                            }
+                        }
+                    },
                     Err(err) => {
-                        eprintln!("Error creating a user: {:?}", err);
+                        eprintln!("Error checking email: {:?}", err);
                         Err(Custom(
                             Status::InternalServerError,
-                            json!({"error":"Something went wrong"}),
+                            json!({"error":"Error checking email"}),
                         ))
                     }
                 }
