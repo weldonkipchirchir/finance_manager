@@ -57,4 +57,10 @@ diesel::joinable!(goals -> users (user_id));
 diesel::joinable!(income -> users (user_id));
 diesel::joinable!(transactions -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(budgets, goals, income, transactions, users,);
+diesel::allow_tables_to_appear_in_same_query!(
+    budgets,
+    goals,
+    income,
+    transactions,
+    users,
+);
